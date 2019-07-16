@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg height="22px" width="22px" viewBox="0 0 22 22">
+  <defs></defs>
+  <g id="Symbols" fill="none" stroke="none">
+    <g id="card/selected-seat" transform="translate(-15.000000, -37.000000)">
+      <circle id="Oval-6" cx="26" cy="48" fill="#BE2026" r="10" stroke="#BE2026"></circle>
+      <polygon id="Check" fill="#FFFFFF" points="21.5 47.5 20 49 24 53 33 44.5 31.5 43 24 50"></polygon>
+    </g>
+  </g>
+</svg>
