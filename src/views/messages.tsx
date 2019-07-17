@@ -2,19 +2,20 @@ import React, { useState, useEffect, useCallback  } from 'react';
 import styled from '@emotion/styled';
 import history from '../history';
 import { Layout, Button } from 'antd';
-import SendBird from 'sendbird';
-import Pusher from 'pusher-js';
+// import SendBird from 'sendbird';
+// import Pusher from 'pusher-js';
+import * as firestoreMessageUtil from '../utils/firestore-message';
 import SendBirdMessage from '../components/sendbird-message';
-import {
-  connect,
-  deleteMessage,
-  enterChannel,
-  getMessage,
-  openChannel,
-  // updateMessage,
-  sendMessage,
-  sendFileMessage,
-} from '../utils/sendbird';
+// import {
+//   connect,
+//   deleteMessage,
+//   enterChannel,
+//   getMessage,
+//   openChannel,
+//   // updateMessage,
+//   sendMessage,
+//   sendFileMessage,
+// } from '../utils/sendbird';
 import { createTextMessage, toCustom } from '../utils/message-converter';
 import { MessageWeatherBotCreate, MessageTextFormCreate } from '../custom-messages';
 import FlightTicketRegisterBot from '../dialog-controllers/flight-ticket-register/bot';
@@ -23,10 +24,10 @@ import { DATA_TYPE } from '../dialog-controllers/flight-ticket-register/types';
 const { Header, Content, Footer } = Layout;
 const APP_ID: string = process.env.REACT_APP_APP_ID || '';
 const CHANNEL_ID: string = process.env.REACT_APP_CHANNEL_ID || '';
-const PUSHER_APP_ID: string = process.env.REACT_APP_PUSHER_APP_ID || '';
-const PUSHER_APP_CLUSTER: string = process.env.REACT_APP_PUSHER_APP_CLUSTER || '';
-const BOT_CHANNEL: string = process.env.REACT_APP_BOT_CHANNEL || '';
-const BOT_WEATHER_EVENT: string = process.env.REACT_APP_BOT_WEATHER_EVENT || '';
+// const PUSHER_APP_ID: string = process.env.REACT_APP_PUSHER_APP_ID || '';
+// const PUSHER_APP_CLUSTER: string = process.env.REACT_APP_PUSHER_APP_CLUSTER || '';
+// const BOT_CHANNEL: string = process.env.REACT_APP_BOT_CHANNEL || '';
+// const BOT_WEATHER_EVENT: string = process.env.REACT_APP_BOT_WEATHER_EVENT || '';
 const EVENT_HANDLER_ID: string = uuid4();
 const WEATHER_API_URL: string = 'http://localhost:5000/chat';
 // TODO temp user id
@@ -59,10 +60,10 @@ export default function Messages({ userId }: { userId: string }) {
   }
 
   const [attachedBot, setAttachedBot] = useState<any>(null);
-  const [messages, setMessages] = useState<[any]>();
-  const [sb, setSb] = useState<any>(null);
-  const [channel, setChannel] = useState<any>(null);
-  const [pusherChannel, setPusherChannel] = useState<any>(null);
+  const [messages, setMessages] = useState<Array<any>>([]);
+  // const [sb, setSb] = useState<any>(null);
+  // const [channel, setChannel] = useState<any>(null);
+  // const [pusherChannel, setPusherChannel] = useState<any>(null);
 
   /* Message Operations */
   const registerFunc = useCallback(
@@ -70,33 +71,32 @@ export default function Messages({ userId }: { userId: string }) {
       // TODO Refactoring attating isBot
       const m = JSON.parse(messageText);
       m.isBot = true;
-      const registeredMessage = await sendMessage(channel, JSON.stringify(m));
-      addMessageInModel(registeredMessage);
+      const registeredMessage = await firestoreMessageUtil.sendMessage(userId, JSON.stringify(m));
+      // addMessageInModel(registeredMessage);
     },
-    [ channel, attachedBot ],
+    [ userId ],
   );
 
   const registerAnswerFunc = useCallback(
     async (messageText) => {
-      const registeredMessage = await sendMessage(channel, messageText);
-      addMessageInModel(registeredMessage);
+      const registeredMessage = await firestoreMessageUtil.sendMessage(userId, messageText);
+      // addMessageInModel(registeredMessage);
 
-      const hasNext = await attachedBot.reactionToAnwer(registeredMessage);
-      console.log('reactionToAnwerの結果', hasNext);
-      if (!hasNext) {
-        detachBot();
-      }
+      // const hasNext = await attachedBot.reactionToAnwer(registeredMessage);
+      // console.log('reactionToAnwerの結果', hasNext);
+      // if (!hasNext) {
+      //   detachBot();
+      // }
     },
-    [ channel, attachedBot ],
+    [ userId ],
   );
 
 
+  // TODO Temp
   const registerFileFunc = useCallback(
     async (file) => {
-      const registeredMessage = await sendFileMessage(channel, file);
-      addMessageInModel(registeredMessage);
     },
-    [ channel ],
+    [ ],
   );
 
 
@@ -111,11 +111,9 @@ export default function Messages({ userId }: { userId: string }) {
 
   const deleteFunc = useCallback(
     async (message) => {
-      await deleteMessage(channel, message);
-      // TODO deleteイベントが自分のブラウザでも発生してまう問題の調査
-      deleteMessageInModel(message.messageId);
+      await firestoreMessageUtil.deleteMessage(userId, message.messageId, message);
     },
-    [ channel ],
+    [ userId ],
   );
 
 
@@ -180,13 +178,13 @@ export default function Messages({ userId }: { userId: string }) {
 
 
   /* API Operations */
-  function fetchToWeatherBotFunc(message: any) {
-    fetch(WEATHER_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-  }
+  // function fetchToWeatherBotFunc(message: any) {
+  //   fetch(WEATHER_API_URL, {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ message }),
+  //   });
+  // }
 
 
   /* BOT Operations */
@@ -211,88 +209,119 @@ export default function Messages({ userId }: { userId: string }) {
   }
 
 
+  // useEffect(() => {
+  //   (async () => {
+  //     // init＿ SendBird
+  //     const sb = new SendBird({appId: APP_ID});
+  //     // const user = await connect(sb, userId);
+  //     await connect(sb, userId);
+  //     const openedChannel: any = await openChannel(sb, CHANNEL_ID);
+  //     await enterChannel(openedChannel);
+  //     setSb(sb);
+  //     setChannel(openedChannel);
+
+  //     const currentQuery = openedChannel.createPreviousMessageListQuery();
+  //     const fetchedMessages: any = await getMessage(currentQuery);
+
+  //     if(fetchedMessages) {
+  //       setMessages(fetchedMessages);
+  //     }
+  //   })();
+
+  // }, [userId]);
+
+
   useEffect(() => {
-    (async () => {
-      // init＿ SendBird
-      const sb = new SendBird({appId: APP_ID});
-      // const user = await connect(sb, userId);
-      await connect(sb, userId);
-      const openedChannel: any = await openChannel(sb, CHANNEL_ID);
-      await enterChannel(openedChannel);
-      setSb(sb);
-      setChannel(openedChannel);
-
-      const currentQuery = openedChannel.createPreviousMessageListQuery();
-      const fetchedMessages: any = await getMessage(currentQuery);
-
-      if(fetchedMessages) {
-        setMessages(fetchedMessages);
-      }
-    })();
-
-  }, [userId]);
-
-
-  useEffect(() => {
-    if (!sb || !channel) {
+    if (!userId) {
       return;
     }
 
-    const ChannelHandler = new sb.ChannelHandler();
+    // const ChannelHandler = new sb.ChannelHandler();
 
-    // Add event handlers for sync in other browser
-    ChannelHandler.onMessageReceived = async (_: any, message: any) => {
-      const m = toCustom(message);
-      // ChatBot has to reaction
-      addMessageInModel(m);
-    };
+    firestoreMessageUtil.onSnapshot(async (snapshot: any) => {
+      for(const change of snapshot.docChanges()) {
 
-    // ChannelHandler.onMessageUpdated = (_: any, message: any) => updateMessageInModel(message);
-    ChannelHandler.onMessageDeleted = (_: any, messageId: any) => deleteMessageInModel(messageId);
-    console.log('addChannelHandler');
-    sb.addChannelHandler(EVENT_HANDLER_ID, ChannelHandler);
+        if (change.type === 'added') {
+          const message = change.doc.data();
+          message.messageId = change.doc.id;
+          const m = toCustom(message);
+          console.log('New : ', m);
+          addMessageInModel(m)
+
+          if (attachedBot && !m.customMessage.isBot) {
+            const hasNext = await attachedBot.reactionToAnwer(m);
+            console.log('reactionToAnwerの結果', hasNext);
+            if (!hasNext) {
+              detachBot();
+            }
+          }
+        }
+        if (change.type === 'modified') {
+          // TOD
+          console.log('Modified : ', change.doc.data());
+        }
+        if (change.type === 'removed') {
+          // TODO
+          console.log('Removed : ', change.doc.id);
+          deleteMessageInModel(change.doc.id);
+
+        }
+      }
+    })
+
+    // // Add event handlers for sync in other browser
+    // ChannelHandler.onMessageReceived = async (_: any, message: any) => {
+    //   const m = toCustom(message);
+    //   // ChatBot has to reaction
+    //   addMessageInModel(m);
+    // };
+
+    // // ChannelHandler.onMessageUpdated = (_: any, message: any) => updateMessageInModel(message);
+    // ChannelHandler.onMessageDeleted = (_: any, messageId: any) => deleteMessageInModel(messageId);
+    // console.log('addChannelHandler');
+    // sb.addChannelHandler(EVENT_HANDLER_ID, ChannelHandler);
 
     return () => {
-      if (!sb || !channel) {
+      if (!userId) {
         return;
       }
 
-      console.log('removeChannelHandler')
-      sb.removeChannelHandler(EVENT_HANDLER_ID);
+      console.log('offSnapshot')
+      firestoreMessageUtil.offSnapshot();
     };
 
-  }, [sb, channel, attachedBot]);
+  }, [userId, attachedBot]);
 
 
 
-  // init Pusher
-  useEffect(() => {
-    const pusher = new Pusher(PUSHER_APP_ID, {
-      cluster: PUSHER_APP_CLUSTER,
-      encrypted: true,
-    });
-    setPusherChannel(pusher.subscribe(BOT_CHANNEL));
-  }, []);
+  // // init Pusher
+  // useEffect(() => {
+  //   const pusher = new Pusher(PUSHER_APP_ID, {
+  //     cluster: PUSHER_APP_CLUSTER,
+  //     encrypted: true,
+  //   });
+  //   setPusherChannel(pusher.subscribe(BOT_CHANNEL));
+  // }, []);
 
-  useEffect(() => {
-    if (!pusherChannel && !channel) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!pusherChannel && !channel) {
+  //     return;
+  //   }
 
-    function registerFuncFromPusher({ message } : { message: any }) {
-      registerFunc(createTextMessage(message))
-    }
+  //   function registerFuncFromPusher({ message } : { message: any }) {
+  //     registerFunc(createTextMessage(message))
+  //   }
 
-    console.log('bind pusherChannel event')
+  //   console.log('bind pusherChannel event')
 
-    pusherChannel.bind(BOT_WEATHER_EVENT, registerFuncFromPusher);
+  //   pusherChannel.bind(BOT_WEATHER_EVENT, registerFuncFromPusher);
 
-    return () => {
-      console.log('unbind pusherChannel event')
-      pusherChannel.unbind(BOT_WEATHER_EVENT, registerFuncFromPusher);
-    };
+  //   return () => {
+  //     console.log('unbind pusherChannel event')
+  //     pusherChannel.unbind(BOT_WEATHER_EVENT, registerFuncFromPusher);
+  //   };
 
-  }, [pusherChannel, channel, registerFunc]);
+  // }, [pusherChannel, channel, registerFunc]);
 
 
   const UserId = styled.div`
@@ -347,10 +376,10 @@ export default function Messages({ userId }: { userId: string }) {
             registerAnswerFunc={registerAnswerFunc}
           />
 
-          <MessageWeatherBotCreate
+          {/* <MessageWeatherBotCreate
             registerFunc={registerFunc}
             fetchToWeatherBotFunc={fetchToWeatherBotFunc}
-          />
+          /> */}
 
         </Container>
       </Content>

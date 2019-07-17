@@ -64,7 +64,7 @@ export default function SendBirdMessage({
       right: '-24px',
     }} >
       <Dropdown overlay={menu} placement="bottomRight" >
-        <a target="_blank" rel="noopener noreferrer" href="#">
+        <a target="_blank" rel="noopener noreferrer">
           <Icon type="more" />
         </a>
       </Dropdown>
