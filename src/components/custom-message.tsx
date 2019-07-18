@@ -42,7 +42,6 @@ export default function CustomMessage({
   registerFunc: Function,
   registerAnswerFunc: Function,
 }) {
-
   const message = toCustom(m)
 
   const customMessages = {

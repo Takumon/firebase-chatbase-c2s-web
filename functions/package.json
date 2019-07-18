@@ -1,0 +1,39 @@
+{
+  "name": "functions",
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc",
+    "serve": "npm run build && firebase serve --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "8"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dialogflow": "^0.10.2",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "firebase-admin": "^8.2.0",
+    "firebase-functions": "^3.1.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.5",
+    "@types/dialogflow": "^0.9.4",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^4.17.0",
+    "@types/node": "^12.6.8",
+    "@types/node-fetch": "^2.3.7",
+    "ts-node": "^8.3.0",
+    "ts-node-dev": "^1.0.0-pre.40",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.3"
+  },
+  "private": true
+}

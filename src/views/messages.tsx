@@ -29,7 +29,7 @@ const CHANNEL_ID: string = process.env.REACT_APP_CHANNEL_ID || '';
 // const BOT_CHANNEL: string = process.env.REACT_APP_BOT_CHANNEL || '';
 // const BOT_WEATHER_EVENT: string = process.env.REACT_APP_BOT_WEATHER_EVENT || '';
 const EVENT_HANDLER_ID: string = uuid4();
-const WEATHER_API_URL: string = 'http://localhost:5000/chat';
+const WEATHER_API_URL: string = 'https://us-central1-chatbase-c2s-web.cloudfunctions.net/api/chat';
 // TODO temp user id
 const BOT_USER_ID: string = 'inouetakumon@gmail.com';
 
@@ -178,13 +178,13 @@ export default function Messages({ userId }: { userId: string }) {
 
 
   /* API Operations */
-  // function fetchToWeatherBotFunc(message: any) {
-  //   fetch(WEATHER_API_URL, {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ message }),
-  //   });
-  // }
+  function fetchToWeatherBotFunc(message: any) {
+    fetch(WEATHER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    }).then(d => console.log('成功', d)).catch(e => console.log('失敗', e));
+  }
 
 
   /* BOT Operations */
@@ -244,6 +244,13 @@ export default function Messages({ userId }: { userId: string }) {
         if (change.type === 'added') {
           const message = change.doc.data();
           message.messageId = change.doc.id;
+          try {
+            toCustom(message)
+          } catch(e) {
+            console.log('message ng', e)
+            console.log('message', message)
+          }
+        
           const m = toCustom(message);
           console.log('New : ', m);
           addMessageInModel(m)
@@ -376,10 +383,10 @@ export default function Messages({ userId }: { userId: string }) {
             registerAnswerFunc={registerAnswerFunc}
           />
 
-          {/* <MessageWeatherBotCreate
+          <MessageWeatherBotCreate
             registerFunc={registerFunc}
             fetchToWeatherBotFunc={fetchToWeatherBotFunc}
-          /> */}
+          />
 
         </Container>
       </Content>
